@@ -162,7 +162,7 @@ func (be *HostgwBackend) RegisterNetwork(ctx context.Context, wg sync.WaitGroup,
 
 		// Wait for the network to populate Management IP
 		log.Infof("Waiting to get ManagementIP from HNSNetwork %s", networkName)
-		waitErr = wait.Poll(500*time.Millisecond, 5*time.Second, func() (done bool, err error) {
+		waitErr = wait.Poll(500*time.Millisecond, 30*time.Second, func() (done bool, err error) {
 			newNetwork, lastErr = hcsshim.HNSNetworkRequest("GET", newNetwork.Id, "")
 			return newNetwork != nil && len(newNetwork.ManagementIP) != 0, nil
 		})
@@ -177,7 +177,7 @@ func (be *HostgwBackend) RegisterNetwork(ctx context.Context, wg sync.WaitGroup,
 			return lastErr == nil, nil
 		})
 		if waitErr == wait.ErrWaitTimeout {
-			return nil, errors.Annotatef(lastErr, "timeout, failed to get net interface for HNSNetwork %s (%s)", networkName, newNetwork.ManagementIP)
+			return nil, errors.Annotatef(waitErr, "timeout, failed to get net interface for HNSNetwork %s (%s)", networkName, newNetwork.ManagementIP)
 		}
 
 		log.Infof("Created HNSNetwork %s", networkName)
